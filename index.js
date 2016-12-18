@@ -17,6 +17,8 @@ const CONTINUE = ['ah bon ?', 'c\'est vrai ?', 'non !', 'nan', 'mais non', 'pas 
 const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
 	'T\'as un sujet sur une formation qui t\'interesse ?'];
 const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', 'mobile'];
+const THANKS = ['super', 'merci', 'canon', 'thanks'];
+const BYE = ['à bientôt', 'au revoir', 'tchao', 'bye', 'à +', 'a bientot', 'a plus'];
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -76,6 +78,27 @@ app.post('/webhook/', function (req, res) {
                 sendTextMessage(sender, _.sample(['Eh oui mec !', 'Oui', 'Bah oui !']))
                     .sendTextMessage(sender, _.sample(['Bref !', 'Alors, je disais...', ':) Bon, comme je te disais...']))
                     .then(() => sendOptionFormation(sender));
+                continue
+            }
+
+            const isThanks = _.some(THANKS, thanks => {
+                return text.toLowerCase().indexOf(thanks) !== -1;
+            })
+            if (isThanks) {
+                sendTextMessage(sender, _.sample([
+                    'De rien !', 'J\'espère avoir été utile', 'Je t\'en prie', 'C\'est moi !',
+                    'C\'est gentil :)',
+                    'Avec plaisir !', ':)', 'Je suis content de t\'avoir aidé']));
+                continue
+            }
+
+            const isBye = _.some(BYE, bye => {
+                return text.toLowerCase().indexOf(bye) !== -1;
+            })
+            if (isBye) {
+                sendTextMessage(sender, _.sample([
+                    'A plus !', 'A bientôt !', 'Tu pars déjà ?! :( Bon, bises :-*', 'Allez, salut !',
+                    'Bye bye :)', 'C\'était cool de te voir!', ':)', 'See you later !']));
                 continue
             }
 
@@ -202,7 +225,7 @@ function sendOptionFormation(sender) {
 	let message = {
         "text": _.sample([
             "Allez, choisis une thématique qui t'interesse :",
-            "Parmi ce liste de thématiques, choisis en une !",
+            "Parmi cette liste de thématiques, choisis en une !",
             "Je te propose une liste de thématiques très intéressantes sur notre portail !",
         ]),
         "quick_replies":[
@@ -269,7 +292,7 @@ function sendGenericMessage(sender, selectedCourse) {
 			{
                 "title": "La femme, un leader comme les autres",
                 "subtitle": "Cours de 20 minutes",
-                "image_url": "https://static.coorpacademy.com/content/partner-au-feminin/fr/medias/img/cover/shutterstock_403515793-1464273763383.jpg",
+                "image_url": "https://static.coorpacademy.com/content/partner-au-feminin/fr/medias/img/cover/shutterstock_283553048-1464273796407.jpg",
 				"buttons": [
 					{
 						"type": "web_url",
