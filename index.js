@@ -45,6 +45,7 @@ app.post('/webhook/', function (req, res) {
 
 			if (isGreeting) {
 				sendGreetingMessage(sender)
+				sendTextMessage(sender, "Qu'est-ce que je peux faire pour toi ?");
 				continue
 			}
 
@@ -89,7 +90,7 @@ function sendTextMessage(sender, text) {
 }
 
 function sendGreetingMessage(sender) {
-	const greetings = _.concat(GREETINGS, 'Hey !', 'Hello, content de te voir !', 'Hello!', 'Hi there!');
+	const greetings = _.concat(GREETINGS, 'Hey !', 'Hello, content de te voir !', 'Hello ! :P', 'Hi there!');
 	const greet = greetings[_.random(0, greetings.length)];
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
