@@ -7,6 +7,10 @@ const _ = require('lodash')
 const app = express()
 
 const GREETINGS = ['Salut', 'Yo', 'Hello', 'Coucou', 'Bonjour', 'Hey'];
+const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
+	'T\'as un sujet sur une formation qui t\'interesse ?'];
+const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', 'mobile'];
+
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -42,18 +46,20 @@ app.post('/webhook/', function (req, res) {
 			const isGreeting = _.some(GREETINGS, greeting => {
 				return text.indexOf(text) !== -1;
 			})
-
 			if (isGreeting) {
 				sendGreetingMessage(sender)
-				sendTextMessage(sender, "Qu'est-ce que je peux faire pour toi ?");
+				sendTextMessage(sender, HELPING[_.random(0, HELPING.length)]);
 				continue
 			}
 
-			if (text === 'Generic') {
+			const isCoursDigital = _.some(DIGITAL, greeting => {
+				return text.indexOf(text) !== -1;
+			})
+			if (isCoursDigital) {
 				sendGenericMessage(sender)
 				continue
 			}
-			sendTextMessage(sender, "Text received, echo: " + text.substring(0, 200))
+			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot 💁" + text.substring(0, 200))
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -90,6 +96,7 @@ function sendTextMessage(sender, text) {
 }
 
 function sendGreetingMessage(sender) {
+	console.log('sender', sender)
 	const greetings = _.concat(GREETINGS, 'Hey !', 'Hello, content de te voir !', 'Hello ! :P', 'Hi there!');
 	const greet = greetings[_.random(0, greetings.length)];
 	request({
@@ -116,26 +123,26 @@ function sendGenericMessage(sender) {
 			"payload": {
 				"template_type": "generic",
 				"elements": [{
-					"title": "First card",
-					"subtitle": "Element #1 of an hscroll",
-					"image_url": "http://messengerdemo.parseapp.com/img/rift.png",
+					"title": "Métiers du digital",
+					"subtitle": "Cours de 15 minutes",
+					"image_url": "https://static.coorpacademy.com/content/up/fr/medias/img/cover/metiers_du_digital-1447318780902.jpg",
 					"buttons": [{
 						"type": "web_url",
-						"url": "https://www.messenger.com",
-						"title": "web url"
-					}, {
-						"type": "postback",
-						"title": "Postback",
-						"payload": "Payload for first element in a generic bubble",
+						"url": "https://up.coorpacademy.com/discipline/dis_VkjiR69Gl",
+						"title": "Commencer le cours"
+					},{
+						"type": "web_url",
+						"url": "https://store.coorpacademy.com/checkout/add/P0"
+						"title": "Acheter le pack"
 					}],
 				}, {
-					"title": "Second card",
-					"subtitle": "Element #2 of an hscroll",
-					"image_url": "http://messengerdemo.parseapp.com/img/gearvr.png",
+					"title": "La Révolution Mobile",
+					"subtitle": "Cours de 15 minutes",
+					"image_url": "https://static.coorpacademy.com/content/up/fr/disciplines/MOBILE.jpg",
 					"buttons": [{
-						"type": "postback",
-						"title": "Postback",
-						"payload": "Payload for second element in a generic bubble",
+						"type": "web_url",
+						"url": "https://www.coorpacademy.com/catalog/trainings/02",
+						"title": "Plus d'information"
 					}],
 				}]
 			}
