@@ -59,7 +59,7 @@ app.post('/webhook/', function (req, res) {
 				sendGenericMessage(sender)
 				continue
 			}
-			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot 💁" + text.substring(0, 200))
+			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot" + text.substring(0, 200))
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -132,7 +132,7 @@ function sendGenericMessage(sender) {
 						"title": "Commencer le cours"
 					},{
 						"type": "web_url",
-						"url": "https://store.coorpacademy.com/checkout/add/P0"
+						"url": "https://store.coorpacademy.com/checkout/add/P0",
 						"title": "Acheter le pack"
 					}],
 				}, {
