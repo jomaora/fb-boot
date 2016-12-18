@@ -64,6 +64,7 @@ app.post('/webhook/', function (req, res) {
             })
             if (isMood) {
                 sendMoodMessage(sender)
+                    .then(() => sendTextMessage(sender, _.sample(['Sinon...', 'Revenons à nos moutons !', ':) Bon, comme je te disais...'])))
                     .then(() => sendOptionFormation(sender));
                 continue
             }
@@ -72,7 +73,9 @@ app.post('/webhook/', function (req, res) {
                 return text.toLowerCase().indexOf(mood) !== -1;
             })
             if (isContinue) {
-                sendTextMessage(sender, _.sample(['Eh oui mec !', 'Oui', 'Bah oui !']));
+                sendTextMessage(sender, _.sample(['Eh oui mec !', 'Oui', 'Bah oui !']))
+                    .sendTextMessage(sender, _.sample(['Bref !', 'Alors, je disais...', ':) Bon, comme je te disais...']))
+                    .then(() => sendOptionFormation(sender));
                 continue
             }
 
@@ -105,14 +108,14 @@ app.post('/webhook/', function (req, res) {
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
-    return new Promise((reject, resolve) => {
+    return new Promise((resolve, reject) => {
         request({
             url: 'https://graph.facebook.com/v2.6/me/messages',
             qs: {access_token},
             method: 'POST',
             json: {
                 recipient: {id:sender},
-                message: messageData,
+                message: { text },
             }
         }, function(error, response, body) {
             if (error) {
@@ -122,7 +125,7 @@ function sendTextMessage(sender, text) {
                 console.log('Error: ', response.body.error)
                 return reject(error)
             }
-            return resolve(true);
+            return resolve();
         })
     });
 }
@@ -155,7 +158,6 @@ function sendGreetingMessage(sender) {
                         console.log('Error: ', response.body.error)
                         return reject(error)
                     }
-                    console.log('sendGreetingMessage')
                     return resolve();
                 })
             });
@@ -198,7 +200,11 @@ function sendOopsMessage(sender) {
 
 function sendOptionFormation(sender) {
 	let message = {
-        "text":"Allez, choisis une thématique qui t'interesse :",
+        "text": _.sample([
+            "Allez, choisis une thématique qui t'interesse :",
+            "Parmi ce liste de thématiques, choisis en une !",
+            "Je te propose une liste de thématiques très intéressantes sur notre portail !",
+        ]),
         "quick_replies":[
           {
             "content_type":"text",
