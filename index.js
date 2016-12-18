@@ -12,7 +12,7 @@ const util = require('util')
 const access_token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxfbv0l6sk1ty90RJ74N4jrb44NMlvfyI8zld23eZBUAwGDD4dUayEZAr1kbE3ZANhxdovj4A3puO3oAzSQ5EZAJ09EDiJzTrNh0yoCBGP8GTEJ1Dlz9wZDZD"
 
 const GREETINGS = ['salut', 'yo', 'hello', 'coucou', 'bonjour', 'hey'];
-const MOOD = ['ça va', 'comment ça va', 'tu vas bien', 'ça roule'];
+const MOOD = ['ca va', 'ça va', 'comment ça va', 'tu vas bien', 'ça roule'];
 const CONTINUE = ['ah bon ?', 'c\'est vrai ?', 'non !', 'nan', 'mais non', 'pas vrai', 'abusé', 'pas possible'];
 const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
 	'T\'as un sujet sur une formation qui t\'interesse ?'];
