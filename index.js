@@ -7,7 +7,11 @@ const _ = require('lodash')
 const app = express()
 const util = require('util')
 
-const GREETINGS = ['Salut', 'Yo', 'Hello', 'Coucou', 'Bonjour', 'Hey'];
+// recommended to inject access tokens as environmental variables, e.g.
+// const token = process.env.PAGE_ACCESS_TOKEN
+const access_token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxfbv0l6sk1ty90RJ74N4jrb44NMlvfyI8zld23eZBUAwGDD4dUayEZAr1kbE3ZANhxdovj4A3puO3oAzSQ5EZAJ09EDiJzTrNh0yoCBGP8GTEJ1Dlz9wZDZD"
+
+const GREETINGS = ['Salut', 'Yo', 'Hello', 'Coucou', 'Bonjour', 'Hey', 'salut', 'yo', 'hello', 'coucou', 'bonjour', 'hey'];
 const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
 	'T\'as un sujet sur une formation qui t\'interesse ?'];
 const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', 'mobile'];
@@ -15,7 +19,7 @@ const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', '
 app.set('port', (process.env.PORT || 5000))
 
 // parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({extended: true}))
 
 // parse application/json
 app.use(bodyParser.json())
@@ -48,7 +52,8 @@ app.post('/webhook/', function (req, res) {
 			})
 			if (isGreeting) {
 				sendGreetingMessage(sender)
-				sendTextMessage(sender, HELPING[_.random(0, HELPING.length)]);
+					.then(() => sendOptionFormation(sender))
+				//sendTextMessage(sender, HELPING[_.random(0, HELPING.length)]);
 				continue
 			}
 
@@ -59,7 +64,8 @@ app.post('/webhook/', function (req, res) {
 				sendGenericMessage(sender)
 				continue
 			}
-			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot ")
+			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot");
+			sendOptionFormation(sender);
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -69,11 +75,6 @@ app.post('/webhook/', function (req, res) {
 	}
 	res.sendStatus(200)
 })
-
-
-// recommended to inject access tokens as environmental variables, e.g.
-// const token = process.env.PAGE_ACCESS_TOKEN
-const access_token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxfbv0l6sk1ty90RJ74N4jrb44NMlvfyI8zld23eZBUAwGDD4dUayEZAr1kbE3ZANhxdovj4A3puO3oAzSQ5EZAJ09EDiJzTrNh0yoCBGP8GTEJ1Dlz9wZDZD"
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
@@ -96,9 +97,14 @@ function sendTextMessage(sender, text) {
 }
 
 function sendGreetingMessage(sender) {
-	getUser(sender)
+	return getUser(sender)
 		.then(userData => {
-			const greetings = _.concat(GREETINGS, `Hey ${userData.first_name}!`, `Hello ${userData.first_name}, content de te voir !`, `Bonjour ${userData.first_name}! :P`, `Coucou ${userData.first_name}!`);
+			const greetings = _.concat(GREETINGS,
+				`Hey ${userData.first_name}!`,
+				`Hello ${userData.first_name}, content de te voir !`,
+				`Bonjour ${userData.first_name}! :P`,
+				`Coucou ${userData.first_name}!`,
+				'Aaaaaaaalors !');
 			const greet = greetings[_.random(0, greetings.length)];
 
 			request({
@@ -126,7 +132,7 @@ function sendOptionFormation(sender) {
     "quick_replies":[
       {
         "content_type":"text",
-        "title":"Red",
+        "title":"Le Numérique",
         "payload":"DIGITAL"
       },
       {
@@ -214,11 +220,12 @@ function sendGenericMessage(sender) {
 function getUser(sender) {
 	return new Promise((resolve, reject) => {
 		request({
-			url: `graph.facebook.com/v2.6/${sender}`,
+			url: `https://graph.facebook.com/v2.6/${sender}`,
 			qs: {
 				fields: 'first_name,last_name,gender',
 				access_token
 			},
+			json: true,
 			method: 'GET'
 		}, function(error, response, body) {
 			if (error) {
