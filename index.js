@@ -34,6 +34,7 @@ app.get('/webhook/', function (req, res) {
 
 // to post data
 app.post('/webhook/', function (req, res) {
+	console.log(req.body)
 	let messaging_events = req.body.entry[0].messaging
 	for (let i = 0; i < messaging_events.length; i++) {
 		let event = req.body.entry[0].messaging[i]
@@ -57,7 +58,7 @@ app.post('/webhook/', function (req, res) {
 				sendGenericMessage(sender)
 				continue
 			}
-			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot" + text.substring(0, 200))
+			sendTextMessage(sender, ":-/ je suis un peu confus, je te rappel, je suis juste un bot ")
 		}
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
@@ -71,7 +72,7 @@ app.post('/webhook/', function (req, res) {
 
 // recommended to inject access tokens as environmental variables, e.g.
 // const token = process.env.PAGE_ACCESS_TOKEN
-const token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxfbv0l6sk1ty90RJ74N4jrb44NMlvfyI8zld23eZBUAwGDD4dUayEZAr1kbE3ZANhxdovj4A3puO3oAzSQ5EZAJ09EDiJzTrNh0yoCBGP8GTEJ1Dlz9wZDZD"
+const access_token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxfbv0l6sk1ty90RJ74N4jrb44NMlvfyI8zld23eZBUAwGDD4dUayEZAr1kbE3ZANhxdovj4A3puO3oAzSQ5EZAJ09EDiJzTrNh0yoCBGP8GTEJ1Dlz9wZDZD"
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
@@ -94,16 +95,58 @@ function sendTextMessage(sender, text) {
 }
 
 function sendGreetingMessage(sender) {
-	console.log('sender', sender)
-	const greetings = _.concat(GREETINGS, 'Hey !', 'Hello, content de te voir !', 'Hello ! :P', 'Hi there!');
-	const greet = greetings[_.random(0, greetings.length)];
+	getUser(sender)
+		.then(userData => {
+			const greetings = _.concat(GREETINGS, `Hey ${userData.first_name}!`, `Hello ${userData.first_name}, content de te voir !`, `Bonjour ${userData.first_name}! :P`, `Coucou ${userData.first_name}!`);
+			const greet = greetings[_.random(0, greetings.length)];
+
+			request({
+				url: 'https://graph.facebook.com/v2.6/me/messages',
+				qs: {access_token},
+				method: 'POST',
+				json: {
+					recipient: {id:sender},
+					message: { text:greet },
+				}
+			}, function(error, response, body) {
+				if (error) {
+					console.log('Error sending messages: ', error)
+				} else if (response.body.error) {
+					console.log('Error: ', response.body.error)
+				}
+			})
+		})
+	;
+}
+
+function sendOptionFormation(sender) {
+	let message = {
+    "text":"Allez, choisis une thématique qui t'interesse :",
+    "quick_replies":[
+      {
+        "content_type":"text",
+        "title":"Red",
+        "payload":"DIGITAL"
+      },
+      {
+        "content_type":"text",
+        "title":"Les assurances",
+        "payload":"LINXEA"
+      },
+      {
+        "content_type":"text",
+        "title":"GIRL POWER",
+        "payload":"AU_FEMININ"
+      }
+    ]
+  };
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {access_token:token},
+		qs: {access_token},
 		method: 'POST',
 		json: {
 			recipient: {id:sender},
-			message: { text:greet },
+			message
 		}
 	}, function(error, response, body) {
 		if (error) {
@@ -141,6 +184,10 @@ function sendGenericMessage(sender) {
 						"type": "web_url",
 						"url": "https://www.coorpacademy.com/catalog/trainings/02",
 						"title": "Plus d'information"
+					},{
+						"type": "web_url",
+						"url": "https://up.coorpacademy.com/discipline/02",
+						"title": "Commencer le cours"
 					}],
 				}]
 			}
@@ -148,7 +195,7 @@ function sendGenericMessage(sender) {
 	}
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {access_token:token},
+		qs: {access_token},
 		method: 'POST',
 		json: {
 			recipient: {id:sender},
@@ -161,6 +208,28 @@ function sendGenericMessage(sender) {
 			console.log('Error: ', response.body.error)
 		}
 	})
+}
+
+function getUser(sender) {
+	return new Promise((resolve, reject) => {
+		request({
+			url: `graph.facebook.com/v2.6/${sender}`,
+			qs: {
+				fields: 'first_name,last_name,gender',
+				access_token
+			},
+			method: 'GET'
+		}, function(error, response, body) {
+			if (error) {
+				console.log(error);
+				return reject(error);
+			} else if (response.body.error) {
+				console.log('Error: ', response.body.error)
+				return reject(error);
+			}
+			return resolve(body);
+		});
+	});
 }
 
 // spin spin sugar
