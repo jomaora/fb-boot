@@ -3,7 +3,10 @@
 const express = require('express')
 const bodyParser = require('body-parser')
 const request = require('request')
+const _ = require('lodash')
 const app = express()
+
+const GREETINGS = ['Salut', 'Yo', 'Hello', 'Coucou', 'Bonjour', 'Hey'];
 
 app.set('port', (process.env.PORT || 5000))
 
@@ -34,6 +37,17 @@ app.post('/webhook/', function (req, res) {
 		let sender = event.sender.id
 		if (event.message && event.message.text) {
 			let text = event.message.text
+
+
+			const isGreeting = _.some(GREETINGS, greeting => {
+				return text.indexOf(text) !== -1;
+			})
+
+			if (isGreeting) {
+				sendGreetingMessage(sender)
+				continue
+			}
+
 			if (text === 'Generic') {
 				sendGenericMessage(sender)
 				continue
@@ -64,6 +78,26 @@ function sendTextMessage(sender, text) {
 		json: {
 			recipient: {id:sender},
 			message: messageData,
+		}
+	}, function(error, response, body) {
+		if (error) {
+			console.log('Error sending messages: ', error)
+		} else if (response.body.error) {
+			console.log('Error: ', response.body.error)
+		}
+	})
+}
+
+function sendGreetingMessage(sender) {
+	const greetings = _.concat(GREETINGS, 'Hey !', 'Hello, content de te voir !', 'Hello!', 'Hi there!');
+	const greet = greetings[_.random(0, greetings.length)];
+	request({
+		url: 'https://graph.facebook.com/v2.6/me/messages',
+		qs: {access_token:token},
+		method: 'POST',
+		json: {
+			recipient: {id:sender},
+			message: { text:greet },
 		}
 	}, function(error, response, body) {
 		if (error) {
