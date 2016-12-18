@@ -11,7 +11,6 @@ const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en p
 	'T\'as un sujet sur une formation qui t\'interesse ?'];
 const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', 'mobile'];
 
-
 app.set('port', (process.env.PORT || 5000))
 
 // parse application/x-www-form-urlencoded
@@ -42,9 +41,8 @@ app.post('/webhook/', function (req, res) {
 		if (event.message && event.message.text) {
 			let text = event.message.text
 
-
 			const isGreeting = _.some(GREETINGS, greeting => {
-				return text.indexOf(text) !== -1;
+				return text.indexOf(greeting) !== -1;
 			})
 			if (isGreeting) {
 				sendGreetingMessage(sender)
@@ -52,8 +50,8 @@ app.post('/webhook/', function (req, res) {
 				continue
 			}
 
-			const isCoursDigital = _.some(DIGITAL, greeting => {
-				return text.indexOf(text) !== -1;
+			const isCoursDigital = _.some(DIGITAL, digital => {
+				return text.indexOf(digital) !== -1;
 			})
 			if (isCoursDigital) {
 				sendGenericMessage(sender)
