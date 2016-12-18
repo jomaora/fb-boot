@@ -13,6 +13,7 @@ const access_token = "EAADEwXIWTAIBABOdksEnPlZAwwlBeJHmExgWIVO9KN7JB7E7M2S2BBqxf
 
 const GREETINGS = ['salut', 'yo', 'hello', 'coucou', 'bonjour', 'hey'];
 const MOOD = ['ça va', 'comment ça va', 'tu vas bien', 'ça roule'];
+const CONTINUE = ['ah bon ?', 'c\'est vrai ?', 'non !', 'nan', 'mais non', 'pas vrai', 'abusé', 'pas possible'];
 const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
 	'T\'as un sujet sur une formation qui t\'interesse ?'];
 const DIGITAL = ['digital', 'digitale', 'numérique', 'numerique', 'internet', 'mobile'];
@@ -54,8 +55,7 @@ app.post('/webhook/', function (req, res) {
 			})
 			if (isGreeting) {
 				sendGreetingMessage(sender)
-					.then(() => sendOptionFormation(sender))
-				//sendTextMessage(sender, HELPING[_.random(0, HELPING.length)]);
+					.then(() => sendOptionFormation(sender));
 				continue
 			}
 
@@ -63,29 +63,37 @@ app.post('/webhook/', function (req, res) {
                 return text.toLowerCase().indexOf(mood) !== -1;
             })
             if (isMood) {
-                sendGreetingMessage(sender)
-                    .then(() => sendOptionFormation(sender))
-                //sendTextMessage(sender, HELPING[_.random(0, HELPING.length)]);
+                sendMoodMessage(sender)
+                    .then(() => sendOptionFormation(sender));
+                continue
+            }
+
+            const isContinue = _.some(CONTINUE, mood => {
+                return text.toLowerCase().indexOf(mood) !== -1;
+            })
+            if (isContinue) {
+                sendTextMessage(sender, _.sample(['Eh oui mec !', 'Oui', 'Bah oui !']));
                 continue
             }
 
 			const isCoursDigital = _.some(DIGITAL, digital => {
 				return text.indexOf(digital) !== -1;
 			})
-			if (isCoursDigital) {
+			/*if (isCoursDigital) {
 				sendGenericMessage(sender)
 				continue
-			}
+			}*/
 
 			if (quickReply) {
-			    sendTextMessage(sender, 'Nous avons trouvé des cours qui pourraient vous intéresser !');
-				sendGenericMessage(sender, quickReply)
+			    sendTextMessage(sender, 'J\'ai trouvé des cours qui pourraient t\'intéresser !')
+			        .then(() => sendGenericMessage(sender, quickReply));
 				continue
 			}
 
-            sendOopsMessage(sender);
-			sendOptionFormation(sender);
+            sendOopsMessage(sender)
+                .then(() => sendOptionFormation(sender));
 		}
+
 		if (event.postback) {
 			let text = JSON.stringify(event.postback)
 			sendTextMessage(sender, "Postback received: "+text.substring(0, 200), token)
@@ -97,22 +105,26 @@ app.post('/webhook/', function (req, res) {
 
 function sendTextMessage(sender, text) {
 	let messageData = { text:text }
-
-	request({
-		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {access_token},
-		method: 'POST',
-		json: {
-			recipient: {id:sender},
-			message: messageData,
-		}
-	}, function(error, response, body) {
-		if (error) {
-			console.log('Error sending messages: ', error)
-		} else if (response.body.error) {
-			console.log('Error: ', response.body.error)
-		}
-	})
+    return new Promise((reject, resolve) => {
+        request({
+            url: 'https://graph.facebook.com/v2.6/me/messages',
+            qs: {access_token},
+            method: 'POST',
+            json: {
+                recipient: {id:sender},
+                message: messageData,
+            }
+        }, function(error, response, body) {
+            if (error) {
+                console.log('Error sending messages: ', error)
+                return reject(error)
+            } else if (response.body.error) {
+                console.log('Error: ', response.body.error)
+                return reject(error)
+            }
+            return resolve(true);
+        })
+    });
 }
 
 function sendGreetingMessage(sender) {
@@ -156,22 +168,22 @@ function sendMoodMessage(sender) {
     let message = '';
     switch (day) {
         case 0:
-            message = _.sample(['Ça roule, c\'est dimanche !', 'J\'ai un peu la gueule de bois, grosse teuf hier !']);
+            message = _.sample(['Ça roule, c\'est dimanche !', 'J\'ai un peu la gueule de bois, grosse teuf hier !', 'Ça va !', 'Comme un dimanche', 'Tranquilou !', 'Bof, ma mère bot me demande de ranger ma chambre-bot']);
             break;
         case 1:
-            message = _.sample(['Ça va !', 'Comme un lundi :-/ !', 'Bof, c\'est lundi !', 'Trop bien, merci !', 'Avec une super pêche pour commencer la semaine']);
+            message = _.sample(['Ça va !', 'Comme un lundi :-/ !', 'Bof, c\'est lundi !', 'Trop bien, merci :) !', 'Avec une super pêche pour commencer la semaine']);
             break;
         case 5:
             message = _.sample(['Super ! c\'est le weekend', 'Excellent !', 'Top, en plus c\'est vendredi (même si moi je taffe tout le temps)']);
             break;
         case 6:
-            message = _.sample(['Super ! c\'est le weekend', 'Tranquilou !']);
+            message = _.sample(['Super ! c\'est le weekend', 'Tranquilou !', 'Bof, ma meuf est partie, je fais le ménage tout seul :(']);
             break;
         default:
             message = _.sample(['Ça peut aller.', 'Tranquilou !', 'Bah... vivement le week-end !', 'Ça va !', 'Ça va, merci pour demander :)', 'Ça roule']);
             break;
     }
-    sendTextMessage(sender, message);
+    return sendTextMessage(sender, message);
 }
 
 function sendOopsMessage(sender) {
@@ -181,30 +193,30 @@ function sendOopsMessage(sender) {
         "No comprendo :-|",
         "Tu pouvoir répéter, moi être juste bot. Pas comprendre tout !"
     ])
-    sendTextMessage(sender, message);
+    return sendTextMessage(sender, message);
 }
 
 function sendOptionFormation(sender) {
 	let message = {
-    "text":"Allez, choisis une thématique qui t'interesse :",
-    "quick_replies":[
-      {
-        "content_type":"text",
-        "title":"Le Numérique",
-        "payload":"DIGITAL"
-      },
-      {
-        "content_type":"text",
-        "title":"Les assurances",
-        "payload":"LINXEA"
-      },
-      {
-        "content_type":"text",
-        "title":"GIRL POWER",
-        "payload":"AU_FEMININ"
-      }
-    ]
-  };
+        "text":"Allez, choisis une thématique qui t'interesse :",
+        "quick_replies":[
+          {
+            "content_type":"text",
+            "title":"Le Numérique",
+            "payload":"DIGITAL"
+          },
+          {
+            "content_type":"text",
+            "title":"Les assurances",
+            "payload":"LINXEA"
+          },
+          {
+            "content_type":"text",
+            "title":"GIRL POWER",
+            "payload":"AU_FEMININ"
+          }
+        ]
+    };
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
 		qs: {access_token},
