@@ -5,6 +5,7 @@ const bodyParser = require('body-parser')
 const request = require('request')
 const _ = require('lodash')
 const app = express()
+const util = require('util')
 
 const GREETINGS = ['Salut', 'Yo', 'Hello', 'Coucou', 'Bonjour', 'Hey'];
 const HELPING = ['Qu\'est que je peux faire pour toi ? Tu cherches un cours en particulier ?',
@@ -34,7 +35,7 @@ app.get('/webhook/', function (req, res) {
 
 // to post data
 app.post('/webhook/', function (req, res) {
-	console.log(req.body)
+	console.log(util.inspect(req.body, {depth: null}));
 	let messaging_events = req.body.entry[0].messaging
 	for (let i = 0; i < messaging_events.length; i++) {
 		let event = req.body.entry[0].messaging[i]
@@ -79,7 +80,7 @@ function sendTextMessage(sender, text) {
 
 	request({
 		url: 'https://graph.facebook.com/v2.6/me/messages',
-		qs: {access_token:token},
+		qs: {access_token},
 		method: 'POST',
 		json: {
 			recipient: {id:sender},
